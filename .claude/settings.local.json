@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(unzip -l \"/Users/jmj/Desktop/Appeal Generator/company-projects-bt-main \\(9\\).zip\")",
+      "Bash(unzip -p \"company-projects-bt-main \\(9\\).zip\" \"company-projects-bt-main/refactored/templates/index.html\")",
+      "Read(//tmp/**)",
+      "Bash(unzip -l \"company-projects-bt-main \\(9\\).zip\")",
+      "Bash(unzip -p \"company-projects-bt-main \\(9\\).zip\" \"company-projects-bt-main/refactored/prompts.py\")",
+      "Bash(git init *)",
+      "Bash(git -C \"/Users/jmj/Desktop/Appeal Generator\" status)",
+      "Bash(git -C \"/Users/jmj/Desktop/Appeal Generator\" log --oneline)",
+      "Bash(git -C \"/Users/jmj/Desktop/Appeal Generator\" add appeal-studio.html .claude/)"
+    ]
+  }
+}

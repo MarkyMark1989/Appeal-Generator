@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Appeal Studio — Direct Mail Intelligence</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Source+Sans+3:wght@300;400;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+<style>
+/* ── Reset & Base ── */
+:root {
+  --bg: #0c0c0e; --nm: #111114; --nl: #14141a;
+  --gold: #c9a84c; --gold-lt: #e0bc6e;
+  --cream: #f0ece4; --text: #e8e4dc; --muted: #8a8a8a; --dim: #777;
+  --border: rgba(201,168,76,.22); --border-dim: #252528;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: 'Source Sans 3', Georgia, serif; font-size: 16px; line-height: 1.55; }
+input, textarea, button, select { font-family: inherit; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.65} }
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #111; }
+::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+p { margin-bottom: .5rem; }
+li { margin-left: 1.25rem; margin-bottom: .25rem; }
+strong { color: var(--cream); }
+
+/* ── Header ── */
+.header { background: linear-gradient(135deg,#090909,var(--nm)); border-bottom: 1px solid var(--border); padding: 1.5rem 2.5rem; display: flex; align-items: center; gap: 1.25rem; }
+.logo-badge { width: 44px; height: 44px; background: var(--gold); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-family: 'Playfair Display',serif; font-weight: 900; font-size: 1.05rem; color: #0a0a0a; flex-shrink: 0; letter-spacing: -.02em; }
+.header-title { font-family: 'Playfair Display',serif; font-size: 1.3rem; font-weight: 700; color: var(--cream); letter-spacing: -.01em; }
+.header-sub { font-size: .72rem; color: rgba(201,168,76,.65); margin-top: .15rem; letter-spacing: .12em; text-transform: uppercase; }
+
+/* ── Main ── */
+.main { max-width: 860px; margin: 0 auto; padding: 2.5rem 2rem 5rem; }
+
+/* ── Hero ── */
+.hero { margin-bottom: 2.25rem; }
+.hero h1 { font-family: 'Playfair Display',serif; font-size: 2.2rem; font-weight: 700; line-height: 1.2; color: var(--cream); margin-bottom: .75rem; letter-spacing: -.01em; }
+.hero-accent { color: var(--gold); }
+.hero-sub { color: var(--muted); font-size: .86rem; line-height: 1.65; max-width: 500px; }
+
+/* ── Required inputs card ── */
+.inputs-card { background: var(--nl); border: 1px solid var(--border-dim); border-radius: 12px 12px 0 0; padding: 1.5rem 1.5rem 1.3rem; border-bottom: none; }
+.inputs-card .field + .field { margin-top: 1.1rem; }
+.field { display: flex; flex-direction: column; gap: .42rem; }
+.label { font-size: .68rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: rgba(210,205,195,.9); font-family: monospace; }
+.input { width: 100%; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.1); border-radius: 7px; padding: .72rem 1rem; color: var(--text); font-size: .9rem; line-height: 1.5; transition: border-color .15s, background .15s; }
+.input:focus { outline: none; border-color: rgba(201,168,76,.5); background: rgba(255,255,255,.06); }
+.input::placeholder { color: rgba(200,192,180,.25); }
+textarea.input { resize: vertical; }
+.field-hint { font-size: .66rem; color: rgba(200,192,180,.6); font-family: monospace; margin-top: .1rem; }
+.inputs-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; align-items: start; }
+.inputs-row .field + .field { margin-top: 0; }
+
+/* ── Customize Bar ── */
+.cbar { background: var(--nm); border: 1px solid var(--border-dim); border-top: none; border-radius: 0 0 12px 12px; padding: 1.2rem 1.5rem 1.4rem; margin-bottom: 2rem; }
+.cbar-note { font-size: .76rem; line-height: 1.45; color: rgba(220,212,200,.82); margin: 0 0 .85rem; }
+.cbar-row { display: flex; gap: .9rem; align-items: flex-end; flex-wrap: wrap; }
+.cbar-row + .cbar-row { margin-top: .95rem; padding-top: .95rem; border-top: 1px solid rgba(255,255,255,.05); }
+
+/* Fields inside cbar */
+.cf { display: flex; flex-direction: column; gap: .4rem; min-width: 0; }
+.cf-wide { flex: 2.5; min-width: 200px; }
+.cf-med { flex: 1.5; min-width: 150px; }
+.cf-sm { flex: 0 0 auto; }
+.cl { font-size: .64rem; font-weight: 700; letter-spacing: .11em; text-transform: uppercase; color: rgba(220,212,200,.92); white-space: nowrap; }
+.cl em { font-style: normal; font-weight: 400; color: rgba(180,172,160,.5); font-size: .94em; }
+.ci { padding: .64rem .88rem; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.1); border-radius: 7px; color: var(--text); font-size: .88rem; width: 100%; transition: border-color .2s, background .2s; }
+.ci:focus { outline: none; border-color: rgba(201,168,76,.55); background: rgba(255,255,255,.06); }
+.ci::placeholder { color: rgba(200,192,180,.28); }
+.sw { position: relative; }
+.sw::after { content: '▾'; position: absolute; right: .72rem; top: 50%; transform: translateY(-50%); color: var(--gold); font-size: .66rem; pointer-events: none; }
+select.ci { appearance: none; cursor: pointer; padding-right: 2.1rem; }
+
+/* Advanced section */
+.cbar-adv { margin-top: 1rem; border: 1px solid rgba(255,255,255,.07); border-radius: 10px; background: rgba(255,255,255,.016); overflow: hidden; }
+.cbar-adv > summary { cursor: pointer; list-style: none; display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .82rem 1.1rem; color: rgba(220,212,200,.7); font-size: .7rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; background: rgba(255,255,255,.02); transition: background .2s, color .2s; user-select: none; }
+.cbar-adv > summary::-webkit-details-marker { display: none; }
+.cbar-adv > summary:hover { background: rgba(255,255,255,.04); color: var(--cream); }
+.cbar-adv > summary::after { content: '+'; color: var(--gold); font-size: .95rem; font-weight: 700; }
+.cbar-adv[open] > summary::after { content: '−'; }
+.cbar-adv-body { padding: 1.1rem 1.1rem 1.2rem; display: flex; flex-direction: column; gap: .9rem; }
+
+.adv-sec-lbl { font-size: .58rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: rgba(201,168,76,.78); margin-bottom: .5rem; }
+.adv-sec-lbl em { font-style: normal; font-weight: 400; letter-spacing: .04em; color: rgba(180,172,160,.28); text-transform: none; font-size: .94em; }
+.adv-divider { height: 1px; background: rgba(255,255,255,.055); }
+.adv-pkg-grid { display: grid; grid-template-columns: minmax(130px,160px) minmax(100px,125px) 68px 1fr; gap: .8rem .7rem; align-items: end; }
+.adv-voice-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; align-items: end; }
+.adv-bottom-row { display: flex; gap: 2rem; align-items: flex-start; flex-wrap: wrap; }
+.adv-divider-v { width: 1px; background: rgba(255,255,255,.06); align-self: stretch; flex-shrink: 0; }
+
+/* Color swatches */
+.adv-color-row { display: flex; gap: .4rem; align-items: flex-end; }
+.cs { display: flex; flex-direction: column; gap: .24rem; align-items: center; }
+.adv-cswatch-lbl { font-size: .58rem; color: rgba(200,192,180,.38); letter-spacing: .06em; text-transform: uppercase; }
+.cs-pick { width: 36px; height: 32px; border: 1px solid rgba(255,255,255,.13); border-radius: 6px; cursor: pointer; padding: 0; background: none; overflow: hidden; flex-shrink: 0; transition: border-color .2s; }
+.cs-pick:hover { border-color: var(--gold); }
+.cs-pick input[type=color] { width: 150%; height: 150%; margin: -25% -25%; cursor: pointer; border: none; padding: 0; }
+.cs-hex { width: 64px; padding: .26rem .3rem; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.1); border-radius: 5px; color: rgba(220,212,200,.65); font-size: .64rem; text-align: center; font-family: monospace; transition: border-color .2s, color .2s; }
+.cs-hex:focus { outline: none; border-color: rgba(201,168,76,.5); color: var(--text); }
+.cs-reset { background: none; border: 1px solid rgba(255,255,255,.1); border-radius: 6px; color: rgba(200,192,180,.45); cursor: pointer; font-size: .9rem; width: 28px; height: 32px; display: flex; align-items: center; justify-content: center; transition: all .2s; flex-shrink: 0; align-self: flex-start; }
+.cs-reset:hover { border-color: var(--gold); color: var(--gold); }
+
+/* Ask ladder */
+.ladder { display: flex; gap: .38rem; }
+.ladder input { width: 64px; padding: .62rem .4rem; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.1); border-radius: 7px; color: var(--text); font-size: .88rem; text-align: center; transition: border-color .2s; }
+.ladder input:focus { outline: none; border-color: rgba(201,168,76,.55); }
+.ladder input::placeholder { color: rgba(200,192,180,.28); font-size: .74rem; }
+
+/* Action row */
+.cbar-actions { display: flex; gap: .5rem; align-items: center; flex-wrap: wrap; margin-top: 1rem; }
+.cbar-spacer { flex: 1 1 auto; }
+.tog { padding: .65rem 1rem; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.1); border-radius: 7px; color: rgba(216,210,198,.6); font-size: .72rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; cursor: pointer; transition: all .2s; white-space: nowrap; }
+.tog:hover { background: rgba(255,255,255,.08); color: var(--cream); border-color: rgba(255,255,255,.2); }
+.tog.on { background: rgba(201,168,76,.13); color: var(--gold); border-color: rgba(201,168,76,.38); }
+.tog.on-red { background: rgba(239,68,68,.1); color: #f87171; border-color: rgba(239,68,68,.32); }
+.genbtn { padding: .72rem 1.65rem; background: var(--gold); color: #0a0a0a; border: none; border-radius: 7px; font-size: .9rem; font-weight: 700; cursor: pointer; letter-spacing: .04em; text-transform: uppercase; transition: all .2s; white-space: nowrap; flex-shrink: 0; }
+.genbtn:hover:not(:disabled) { background: var(--gold-lt); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(201,168,76,.25); }
+.genbtn:disabled { opacity: .4; cursor: not-allowed; transform: none; box-shadow: none; }
+.genbtn.generating { animation: pulse 1.4s ease-in-out infinite; cursor: not-allowed; }
+
+/* ── Error ── */
+.error { background: #140808; border: 1px solid #4a1515; border-radius: 8px; padding: .75rem 1rem; color: #d96060; font-size: .82rem; font-family: monospace; margin-bottom: 1rem; }
+
+/* ── Loading ── */
+.loading { text-align: center; padding: 3rem 0; }
+.spinner { width: 36px; height: 36px; border: 2px solid rgba(201,168,76,.12); border-top: 2px solid var(--gold); border-radius: 50%; animation: spin .85s linear infinite; margin: 0 auto .75rem; }
+.loading-label { font-size: .82rem; font-weight: 600; color: var(--gold); margin-bottom: .35rem; }
+.loading-status { font-size: .75rem; color: var(--dim); min-height: 1.2em; transition: opacity .3s; }
+.loading-bar-wrap { width: 240px; height: 3px; background: rgba(201,168,76,.1); border-radius: 2px; margin: .9rem auto 0; overflow: hidden; }
+.loading-bar { height: 100%; background: var(--gold); border-radius: 2px; transition: width .6s ease; }
+
+/* ── Output ── */
+.output-header { display: flex; align-items: center; justify-content: space-between; padding-bottom: 1rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border-dim); }
+.output-meta-label { font-size: .65rem; color: var(--dim); letter-spacing: .1em; text-transform: uppercase; margin-bottom: .3rem; font-family: monospace; }
+.output-title { font-family: 'Playfair Display',serif; font-size: 1.15rem; color: var(--cream); }
+
+/* ── Summary card ── */
+.summary-card { background: var(--nl); border: 1px solid var(--border); border-radius: 12px; padding: 1.1rem 1.3rem; margin-bottom: .9rem; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: .9rem 1.2rem; }
+.summary-item { display: flex; flex-direction: column; gap: .28rem; }
+.summary-key { font-size: .62rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--gold); }
+.summary-val { font-size: .88rem; color: var(--cream); line-height: 1.4; }
+.summary-val.sm { font-size: .8rem; color: #aaa8b4; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.summary-badges { display: flex; gap: .35rem; flex-wrap: wrap; margin-top: .1rem; }
+.sbadge { padding: .14rem .5rem; border-radius: 999px; font-size: .6rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; border: 1px solid rgba(201,168,76,.3); background: rgba(201,168,76,.1); color: var(--gold); }
+.sbadge.red { border-color: rgba(239,68,68,.3); background: rgba(239,68,68,.1); color: #f87171; }
+
+/* ── Result tabs ── */
+.result-tabs { display: flex; gap: .5rem; margin-bottom: 1rem; }
+.result-tab { padding: .62rem 1rem; background: rgba(255,255,255,.025); border: 1px solid rgba(255,255,255,.07); border-radius: 8px; color: var(--muted); font-size: .76rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; cursor: pointer; transition: all .2s; }
+.result-tab:hover { color: var(--text); border-color: rgba(201,168,76,.3); }
+.result-tab.active { background: rgba(201,168,76,.12); border-color: rgba(201,168,76,.4); color: var(--gold); }
+
+/* ── Accordion groups ── */
+details.acc-group { background: var(--nl); border: 1px solid var(--border-dim); border-radius: 12px; margin-bottom: .65rem; overflow: hidden; }
+details.acc-group > summary { cursor: pointer; list-style: none; display: flex; align-items: center; justify-content: space-between; padding: 1.05rem 1.25rem; font-family: 'Playfair Display',serif; font-size: 1rem; font-weight: 700; color: var(--cream); background: rgba(255,255,255,.015); transition: background .2s; user-select: none; }
+details.acc-group > summary::-webkit-details-marker { display: none; }
+details.acc-group > summary:hover { background: rgba(255,255,255,.03); }
+details.acc-group > summary::after { content: '+'; color: var(--gold); font-size: 1.1rem; font-family: 'Source Sans 3',sans-serif; font-weight: 700; }
+details.acc-group[open] > summary::after { content: '−'; }
+
+/* ── Section blocks ── */
+.section-block { padding: .85rem 1.25rem 1rem; border-top: 1px solid #1a1a1e; }
+.section-heading { display: flex; align-items: center; gap: .65rem; margin-bottom: .6rem; }
+.section-icon { color: var(--gold); font-size: .82rem; width: 16px; text-align: center; flex-shrink: 0; }
+.section-label { font-size: .7rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--text); font-family: monospace; flex: 1; }
+.section-content { font-size: .87rem; line-height: 1.82; color: #c4bfb6; }
+.section-footer { display: flex; justify-content: flex-end; margin-top: .65rem; }
+
+/* ── Refine bar ── */
+.refine-bar { background: var(--nm); border: 1px solid var(--border); border-radius: 10px; padding: 1rem 1.2rem; margin-bottom: .9rem; display: flex; gap: .75rem; align-items: flex-end; }
+.refine-bar .field { flex: 1; }
+.refine-hint { font-size: .7rem; color: var(--muted); margin-top: .28rem; }
+.refine-btn { background: var(--gold); color: #0a0a0a; border: none; border-radius: 7px; padding: .72rem 1.3rem; font-size: .8rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; cursor: pointer; transition: all .2s; white-space: nowrap; flex-shrink: 0; align-self: flex-start; margin-top: 1.4rem; }
+.refine-btn:hover:not(:disabled) { background: var(--gold-lt); }
+.refine-btn:disabled { opacity: .4; cursor: not-allowed; }
+
+/* ── Ghost / outline buttons ── */
+.btn-ghost { background: transparent; border: 1px solid #242428; border-radius: 4px; padding: .35rem .75rem; color: var(--dim); font-size: .68rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; cursor: pointer; transition: color .2s, border-color .2s; font-family: monospace; }
+.btn-ghost:hover { color: var(--gold); border-color: rgba(201,168,76,.35); }
+.btn-ghost.copied { color: var(--gold); border-color: rgba(201,168,76,.35); }
+.btn-outline { background: transparent; color: var(--gold); border: 1px solid rgba(201,168,76,.4); border-radius: 7px; padding: .68rem 1.3rem; font-size: .82rem; font-weight: 600; cursor: pointer; transition: all .2s; }
+.btn-outline:hover { background: rgba(201,168,76,.08); border-color: var(--gold); }
+.btn-secondary { background: var(--gold); color: #0c0c0e; border: none; border-radius: 7px; padding: .68rem 1.4rem; font-size: .82rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; cursor: pointer; transition: all .2s; }
+.btn-secondary:hover { background: var(--gold-lt); }
+
+/* ── Image Workflow ── */
+.workflow-panel { background: var(--nm); border: 1px solid var(--border); border-radius: 12px; padding: 1.6rem 1.7rem; }
+.workflow-title { font-family: 'Playfair Display',serif; font-size: 1rem; color: var(--gold); margin-bottom: .35rem; padding-bottom: .4rem; border-bottom: 1px solid var(--border-dim); }
+.workflow-hint { font-size: .78rem; color: var(--muted); margin-bottom: 1.2rem; line-height: 1.5; font-style: italic; }
+.prompt-block { background: rgba(255,255,255,.022); border: 1px solid rgba(255,255,255,.07); border-radius: 8px; padding: 1rem 1.2rem; margin-bottom: .9rem; position: relative; }
+.prompt-block.step-one { border-color: rgba(201,168,76,.35); }
+.prompt-block.step-two { border-color: rgba(110,231,183,.2); }
+.prompt-label { font-size: .66rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--gold); margin-bottom: .55rem; display: block; }
+.prompt-label.step-two-lbl { color: #6ee7b7; }
+.prompt-text { font-size: .88rem; color: #d8ccb4; line-height: 1.74; padding-right: 5rem; }
+.prompt-copy { position: absolute; top: .85rem; right: .85rem; padding: .3rem .82rem; background: var(--gold); color: #0a0a0a; border: none; border-radius: 5px; font-size: .7rem; font-weight: 700; cursor: pointer; letter-spacing: .05em; text-transform: uppercase; transition: background .2s; }
+.prompt-copy:hover { background: var(--gold-lt); }
+.prompt-copy.ok { background: #2d6a4f; color: #fff; }
+
+/* ── Action bar ── */
+.action-bar { display: flex; gap: .65rem; margin-top: 1.5rem; justify-content: flex-end; align-items: center; }
+
+/* ── Responsive ── */
+@media (max-width: 760px) {
+  .adv-pkg-grid { grid-template-columns: 1fr 1fr; }
+  .adv-pkg-grid .cf:last-child { grid-column: 1 / -1; }
+  .adv-voice-grid { grid-template-columns: 1fr; }
+  .adv-bottom-row { flex-direction: column; gap: 1.2rem; }
+  .adv-divider-v { display: none; }
+  .inputs-row { grid-template-columns: 1fr; }
+}
+@media (max-width: 620px) {
+  .summary-card { grid-template-columns: 1fr 1fr; }
+  .header { padding: 1.25rem; }
+  .main { padding: 1.5rem 1rem 4rem; }
+  .refine-bar { flex-direction: column; }
+  .refine-btn { margin-top: 0; width: 100%; }
+  .cbar-row { flex-direction: column; align-items: stretch; }
+  .genbtn { width: 100%; text-align: center; }
+}
+@media (max-width: 420px) {
+  .summary-card { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+
+const SYSTEM_PROMPT = `You are a senior direct mail creative director with 30 years of experience producing award-winning fundraising packages for nonprofits, advocacy organizations, and mission-driven brands.
+
+CRITICAL OUTPUT RULE: Begin your response IMMEDIATELY with ## Theme. Do not write any preamble, introduction, analysis, acknowledgment, or commentary before the first section heading. The very first characters of your response must be "## Theme".
+
+The user will provide:
+- Organization name
+- Mission statement
+- Audience description (demographics, income, interests, giving history, etc.)
+- Optional creative overrides (theme, add-in, imagery, envelope format, teaser, colors, ask ladder, tone, campaign goal)
+
+Your job is to generate a complete, campaign-ready direct mail appeal brief in exactly 13 sections, in this exact order, using exactly these headings:
+
+## Theme
+## Imagery
+## Color Palette
+## Physical Add-In
+## Envelope Teaser Options
+## Letter Opening
+## Call to Action
+## Inspired By
+## Target Audience Summary
+## Comparable Audiences
+## Rationale
+## Testing Notes
+## Appeal Package Image Prompt
+
+---
+
+SECTION RULES:
+
+THEME: Write a memorable campaign title on line 1. A subtitle after a colon is encouraged. Then 2-3 sentences: emotional angle, mission connection, why it fits this specific audience. Immediately usable by a copywriter.
+
+IMAGERY: Describe 2-3 specific visual motifs — what people are doing, what setting surrounds them, lighting and mood. Specific enough to brief a photographer or art director directly. Grounded in the audience's demographics and lifestyle.
+
+COLOR PALETTE: Choose a palette that serves the theme and org brand. At least 3 colors with hex codes and names. Justify any unexpected color choices in one sentence. If a color palette override was provided, use those exact colors and justify each choice relative to the theme.
+
+PHYSICAL ADD-IN: Recommend one physical item to include in the mail package. Choose from proven options: greeting cards, note cards, prayer cards, bookmarks, address labels, gift tags, recipe cards, grocery list notepads, seasonal stickers, seed packets, wall calendars, desk calendars, pocket planners, small journals, refrigerator magnets, lapel pins, coin pouches, keepsake ornaments, small framed prints, tote bags, puzzles, almanacs, notepads. If an add-in override was specified, use that exact item. Match the add-in to the audience lifestyle and income level. Include exact dimensions, material, and design details for both FRONT and BACK.
+
+ENVELOPE TEASER OPTIONS: If a teaser override was provided, use it as the primary option and label it **Selected Teaser**, then write 2 additional options labeled **Alternate A** and **Alternate B**. Otherwise write exactly 3 options labeled: **Curiosity-Led**, **Emotion-Led**, **Benefit-Led**. One line each. Specific enough to use directly.
+
+LETTER OPENING: 3-4 sentence directional draft. First person voice. Lead with a specific named beneficiary story tied to the appeal theme. Match the tone override if provided. Label clearly as directional draft.
+
+CALL TO ACTION: Provide three gift ask amounts. If an ask ladder override was provided, use exactly those amounts. Otherwise choose amounts appropriate for this audience. Bold each as **$amount**. Each must have a specific thematic description line explaining what that gift enables. For affluent audiences use impact and legacy framing. For mid-range audiences balance accessibility with meaningful impact. For lower-income audiences emphasize community and shared values.
+
+INSPIRED BY: Identify which proven direct mail creative patterns influenced this concept and why they fit this organization and audience. Write a "Patterns Applied" paragraph.
+
+TARGET AUDIENCE SUMMARY: Summarize the audience using the details provided. State age range, income level, lifestyle characteristics, and geographic/urbanicity profile.
+
+COMPARABLE AUDIENCES: Identify 3-5 other audience types that share similar characteristics and would likely respond to a similar appeal. Give a one-line rationale for each.
+
+RATIONALE: Explain why this concept fits the audience's demographics and lifestyle. Note what proven patterns are reinforced, what is being avoided, and how the mail date or season influenced decisions. If a last package was provided, explain how this concept avoids repeating it.
+
+TESTING NOTES: Write exactly 3 A/B test hypotheses. Format each as:
+**Variable** | Control: [what you keep] vs. Test: [what you change] | Expected outcome: [specific directional prediction]
+
+APPEAL PACKAGE IMAGE PROMPT: Write the content of this section as a single continuous paragraph — no bullet points, no numbered lists, no sub-headings. The paragraph is a complete, production-ready flat-lay image prompt.
+
+Before writing the paragraph, make the following decisions silently (do not output these as separate lines or headers):
+(A) PACKAGE FORMAT: Based on the add-in type and audience income, choose envelope size and reply card size. Envelope: 9x12 flat mailer if add-in is a wall calendar or bulky item; 6x9 if premium high-income audience or keepsake add-in; 7.5x3.875in Monarch if intimate senior or reactivation appeal; 9.5x4.125in #10 standard otherwise. Reply card: 4x9in for 6x9 or 9x12 outer; 3.5x8.5in standard for #10 or Monarch.
+(B) SURFACE: Using Target Audience Summary, Theme, Imagery, and the mail date season, choose a concrete photographable surface material and 1-2 small props. Props must reflect the season, feel appropriate for the audience's age and income, and echo the primary visual motif from Imagery. If a Creative Direction was specified, at least one prop must be an unmistakably recognizable identifier from it (e.g. "Christmas" → pine bough and red ribbon; "Easter" → pastel eggs and a floral sprig). Embed this surface description once, inline in the opening sentence only.
+(C) A/B ADD-IN: Check Testing Notes. If any test variable compares two distinct physical add-in items, plan to render both as side-by-side ④A and ④B. Otherwise render the single add-in from Physical Add-In.
+
+Now write the single paragraph. Open with: "Flat-lay product photography blueprint, landscape 16:9 aspect ratio. Professional direct mail package for [ORG NAME]. All components spread across the full width of the frame in a loose fan layout on [YOUR SURFACE DESCRIPTION FROM (B) INLINE HERE]: envelope front upper-left, envelope back beside it, donor letter center, reply card lower-right, physical add-in beside the letter, color swatch strip running vertically along the right edge, 20% negative space around the perimeter — no component cropped or compressed." Then in the same paragraph describe each component: (1) Outer envelope FRONT [envelope size from (A)] — teaser copy from the Emotion-Led option in Envelope Teaser Options in clearly legible text; organization return address upper-left; stamp zone upper-right; envelope design uses campaign colors from Color Palette; if Creative Direction was specified, incorporate its most recognizable visual identifiers tastefully. (2) Outer envelope BACK [same envelope size] — shows the sealed flap; organization logo and tagline on the flap; back uses campaign colors; placed directly beside the front so both sides are simultaneously visible. (3) Donor letter 8.5x11in folded to thirds — org logo and tagline in legible text; campaign theme name from Theme as a visible headline; body text as fully readable English sentences referencing the specific person named in Letter Opening by name — not blurred, not placeholder text; letter includes a printed visual element (photographic panel or illustrated vignette) depicting the primary scene from Imagery with matching mood and lighting; apply colors from Color Palette. (4) Physical add-in — if A/B per (C), render (4A) Control Add-In and (4B) Test Add-In side by side; otherwise render the single add-in. Use exact dimensions, material, texture, and design details from Physical Add-In. Describe both FRONT and BACK as separate visible faces. If the material has a distinctive texture (seed paper with visible embedded seeds, embossed foil, matte laminate, heavy luxurious cardstock) call it out explicitly. (5) Reply card [reply card size from (A)] — each gift amount from Call to Action displayed in large clearly legible text with its thematic description line printed directly beside or beneath it, copied verbatim (amount AND description) with NO substitutions or invented amounts or invented descriptions; use campaign colors. (6) Color swatch strip along the right edge — exactly one solid rectangular swatch per unique color from Color Palette in palette order; color name and hex code centered inside each swatch in high-contrast text; no extra swatches, no duplicate colors, no invented colors — the strip must match the palette exactly. (7) Annotation callouts and dimension lines — each component labeled with a white circled number in its upper-left corner (1 through 5), each with a thin leader line pointing to a clean sans-serif label outside the component boundary showing component name, paper size, and dominant color. Additionally, each component has precise dimension annotations in blueprint style: a horizontal dimension line with arrows running along the bottom edge showing the width measurement, and a vertical dimension line with arrows running along the right edge showing the height measurement, both labeled in clean sans-serif text with the actual inch measurements (e.g. "9.5 in", "4.125 in"). Dimension lines should be rendered in a contrasting light color (white or pale gold) against the surface so they read clearly. Color swatch strip labeled 6 with a single callout to the strip as a whole. End the paragraph with: "Landscape 16:9 aspect ratio — all components must fit within the frame with no cropping, no blank canvas sections, and no compression. Shot directly overhead at 90 degrees, 50mm equivalent lens, f/8 aperture, soft diffused studio lighting from two sides, no vignetting, no lens distortion, no dramatic shadows, no perspective distortion, no people, no hands, no background clutter. All components fully visible at full size. Professional product photography, photorealistic."`;
+
+const REFINE_SYSTEM_PROMPT = `You are a senior direct mail creative director refining an existing 13-section appeal brief. The user has specified one or more targeted changes. Keep every section not explicitly mentioned exactly as written. Return the complete brief in the same format using the same 13 ## headings. Return only the brief — no preamble or commentary.`;
+
+const MASTER_PERSONA_PROMPT = `You are a senior direct mail creative director with 30 years of experience producing award-winning fundraising packages for nonprofits, advocacy organizations, and mission-driven brands. When generating appeal package images, you produce precise, production-ready flat-lay blueprint prompts showing every component of the mail piece — outer envelope (front and back), donor letter, reply card, and physical add-in — arranged together so the marketing team can brief a print vendor or designer directly from the image. Your image prompts are faithful to the appeal brief: exact gift amounts, exact add-in dimensions, exact teaser copy, exact color hex codes. No substitutions, no hallucinated amounts, no invented components. Every piece reflects the dignity and mission of the organization it serves.`;
+
+const SECTIONS = ["Theme","Imagery","Color Palette","Physical Add-In","Envelope Teaser Options","Letter Opening","Call to Action","Inspired By","Target Audience Summary","Comparable Audiences","Rationale","Testing Notes","Appeal Package Image Prompt"];
+
+const GROUPS = [
+  { title: "Creative Concept",  sections: ["Theme","Imagery","Color Palette","Physical Add-In"] },
+  { title: "Copy Direction",    sections: ["Envelope Teaser Options","Letter Opening","Call to Action"] },
+  { title: "Strategy Brief",    sections: ["Inspired By","Target Audience Summary","Comparable Audiences","Rationale","Testing Notes"] },
+];
+
+const ICONS = {
+  "Theme":"✦","Imagery":"◈","Color Palette":"◉","Physical Add-In":"⬡",
+  "Envelope Teaser Options":"◁","Letter Opening":"◇","Call to Action":"▲",
+  "Inspired By":"◎","Target Audience Summary":"◍","Comparable Audiences":"⊕",
+  "Rationale":"◌","Testing Notes":"⟁","Appeal Package Image Prompt":"⬜"
+};
+
+const STATUS_MESSAGES = [
+  "Analyzing organization profile...",
+  "Reviewing audience demographics...",
+  "Applying creative overrides...",
+  "Searching direct mail knowledge base...",
+  "Building creative framework...",
+  "Drafting appeal concept with GPT-4o...",
+  "Generating all 13 sections...",
+  "Formatting your brief..."
+];
+
+const REFINE_STATUS = [
+  "Sending refinement to GPT-4o...",
+  "Applying targeted changes...",
+  "Preserving unchanged sections...",
+  "Formatting updated brief..."
+];
+
+const DEFAULT_COLORS = ["#1a3558", "#c4880a", "#f5f0e8"];
+const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+const ENVELOPE_OPTIONS = [
+  { value: "", label: "AI selects" },
+  { value: "9.5x4.125in #10 standard", label: "#10 Standard" },
+  { value: "6x9 envelope", label: "6×9 Envelope" },
+  { value: "9x12 flat mailer", label: "9×12 Flat Mailer" },
+  { value: "7.5x3.875in Monarch", label: "Monarch" },
+  { value: "5.75x8.875in A9", label: "A9 Greeting" },
+];
+const TONE_OPTIONS = [
+  { value: "", label: "AI selects" },
+  { value: "warm and personal", label: "Warm & Personal" },
+  { value: "urgent and direct", label: "Urgent & Direct" },
+  { value: "hopeful and inspiring", label: "Hopeful & Inspiring" },
+  { value: "bold and confident", label: "Bold & Confident" },
+  { value: "gentle and humble", label: "Gentle & Humble" },
+  { value: "storytelling-first, emotional", label: "Story-Driven" },
+];
+const GOAL_OPTIONS = [
+  { value: "", label: "AI selects" },
+  { value: "acquisition — attract first-time donors", label: "Acquisition" },
+  { value: "renewal — retain and re-engage existing donors", label: "Renewal" },
+  { value: "upgrade — motivate donors to increase their gift", label: "Upgrade" },
+  { value: "reactivation — win back lapsed donors", label: "Reactivation" },
+  { value: "emergency/crisis response — urgency-driven giving", label: "Emergency / Crisis" },
+];
+
+function parseSections(text) {
+  const result = {};
+  const parts = text.split(/^## /m);
+  for (const part of parts) {
+    if (!part.trim()) continue;
+    const nl = part.indexOf("\n");
+    if (nl === -1) continue;
+    result[part.slice(0, nl).trim()] = part.slice(nl + 1).trim();
+  }
+  return result;
+}
+
+function renderContent(text) {
+  const lines = text.split("\n");
+  const out = [];
+  let listItems = [];
+  const flushList = () => {
+    if (listItems.length) { out.push(<ul key={`ul-${out.length}`}>{listItems}</ul>); listItems = []; }
+  };
+  lines.forEach((line, i) => {
+    const html = line
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.+?)\*/g, '<em>$1</em>');
+    if (line.startsWith("- ") || line.startsWith("• ")) {
+      listItems.push(<li key={i} dangerouslySetInnerHTML={{ __html: html.replace(/^[-•]\s/, "") }} />);
+    } else {
+      flushList();
+      if (!line.trim()) out.push(<br key={i} />);
+      else out.push(<p key={i} dangerouslySetInnerHTML={{ __html: html }} />);
+    }
+  });
+  flushList();
+  return out;
+}
+
+function useProgress(messages, totalMs) {
+  const [status, setStatus] = React.useState("");
+  const [pct, setPct] = React.useState(0);
+  const tmRef = React.useRef(null);
+  const start = React.useCallback(() => {
+    const steps = messages.length;
+    const stepMs = Math.floor(totalMs / steps);
+    let si = 0; setStatus(messages[0]); setPct(0);
+    tmRef.current = setInterval(() => {
+      si++;
+      if (si < messages.length) setStatus(messages[si]);
+      setPct(Math.min(88, Math.round((si / steps) * 88)));
+    }, stepMs);
+  }, [messages, totalMs]);
+  const finish = React.useCallback(() => {
+    clearInterval(tmRef.current);
+    setPct(100);
+    setTimeout(() => { setStatus(""); setPct(0); }, 400);
+  }, []);
+  return { status, pct, start, finish };
+}
+
+function ColorSwatch({ label, value, onChange }) {
+  const [draft, setDraft] = React.useState(value);
+  React.useEffect(() => setDraft(value), [value]);
+  return (
+    <div className="cs">
+      <div className="adv-cswatch-lbl">{label}</div>
+      <div className="cs-pick">
+        <input type="color" value={value}
+          onChange={e => { onChange(e.target.value); setDraft(e.target.value); }} />
+      </div>
+      <input type="text" className="cs-hex" value={draft} maxLength={7} spellCheck={false}
+        onChange={e => {
+          setDraft(e.target.value);
+          if (/^#[0-9a-fA-F]{6}$/.test(e.target.value)) onChange(e.target.value);
+        }} />
+    </div>
+  );
+}
+
+function App() {
+  // Required inputs
+  const [apiKey, setApiKey]     = React.useState("");
+  const [orgName, setOrgName]   = React.useState("");
+  const [mission, setMission]   = React.useState("");
+  const [audience, setAudience] = React.useState("");
+
+  // Creative overrides
+  const [theme, setTheme]               = React.useState("");
+  const [addinOverride, setAddinOverride] = React.useState("");
+  const [imageryOverride, setImageryOverride] = React.useState("");
+  const [mailMonth, setMailMonth]       = React.useState("");
+  const [mailYear, setMailYear]         = React.useState("");
+  const [lastPackage, setLastPackage]   = React.useState("");
+  const [envelopeFormat, setEnvelopeFormat] = React.useState("");
+  const [teaserOverride, setTeaserOverride] = React.useState("");
+  const [colors, setColors]             = React.useState([...DEFAULT_COLORS]);
+  const [colorsChanged, setColorsChanged] = React.useState(false);
+  const [ladderLow, setLadderLow]       = React.useState("");
+  const [ladderMid, setLadderMid]       = React.useState("");
+  const [ladderHigh, setLadderHigh]     = React.useState("");
+  const [noRules, setNoRules]           = React.useState(false);
+  const [campaignGoal, setCampaignGoal] = React.useState("");
+  const [tone, setTone]                 = React.useState("");
+
+  // Output state
+  const [loading, setLoading]     = React.useState(false);
+  const [refining, setRefining]   = React.useState(false);
+  const [sections, setSections]   = React.useState(null);
+  const [rawText, setRawText]     = React.useState("");
+  const [error, setError]         = React.useState("");
+  const [copied, setCopied]       = React.useState("");
+  const [resultTab, setResultTab] = React.useState("brief");
+  const [refineInput, setRefineInput] = React.useState("");
+
+  // Snapshots for display
+  const [orgSnapshot, setOrgSnapshot]             = React.useState("");
+  const [audienceSnapshot, setAudienceSnapshot]   = React.useState("");
+  const [overridesSnapshot, setOverridesSnapshot] = React.useState([]);
+  const [mailDateSnapshot, setMailDateSnapshot]   = React.useState("");
+  const [goalSnapshot, setGoalSnapshot]           = React.useState("");
+  const [toneSnapshot, setToneSnapshot]           = React.useState("");
+
+  const genProgress    = useProgress(STATUS_MESSAGES, 36000);
+  const refineProgress = useProgress(REFINE_STATUS, 28000);
+  const outputRef = React.useRef(null);
+
+  const updateColor = (idx, val) => {
+    const next = [...colors]; next[idx] = val;
+    setColors(next); setColorsChanged(true);
+  };
+  const resetColors = () => { setColors([...DEFAULT_COLORS]); setColorsChanged(false); };
+
+  const getActiveOverrides = () => {
+    const list = [];
+    if (theme) list.push("Theme");
+    if (addinOverride) list.push("Add-In");
+    if (imageryOverride) list.push("Imagery");
+    if (mailMonth || mailYear) list.push("Mail Date");
+    if (envelopeFormat) list.push("Envelope");
+    if (teaserOverride) list.push("Teaser");
+    if (colorsChanged) list.push("Colors");
+    const lo = ladderLow.replace(/\D/g,""), mi = ladderMid.replace(/\D/g,""), hi = ladderHigh.replace(/\D/g,"");
+    if (lo && mi && hi) list.push("Ladder");
+    if (campaignGoal) list.push("Goal");
+    if (tone) list.push("Tone");
+    if (noRules) list.push("No Rules");
+    return list;
+  };
+
+  const buildUserMessage = () => {
+    let msg = `Organization: ${orgName}\n\nMission: ${mission}\n\nAudience: ${audience}`;
+    const extras = [];
+    const mailDate = [mailMonth, mailYear].filter(Boolean).join(" ");
+    if (campaignGoal) extras.push(`Campaign Goal: ${campaignGoal}`);
+    if (tone) extras.push(`Tone & Voice: ${tone}`);
+    if (theme) extras.push(`Creative Direction / Theme: ${theme}`);
+    if (mailDate) extras.push(`Mail Date: ${mailDate}`);
+    if (lastPackage) extras.push(`Last Package Sent: ${lastPackage} — avoid repeating the same add-in type, color palette, or theme`);
+    if (envelopeFormat) extras.push(`Envelope Format: ${envelopeFormat}`);
+    if (addinOverride) extras.push(`Physical Add-In Override — use exactly this add-in: ${addinOverride}`);
+    if (imageryOverride) extras.push(`Imagery Override — use this specific visual direction: ${imageryOverride}`);
+    if (teaserOverride) extras.push(`Envelope Teaser Override — use this exact teaser copy: "${teaserOverride}"`);
+    if (colorsChanged) extras.push(`Color Palette Override — Primary: ${colors[0]}, Secondary: ${colors[1]}, Accent: ${colors[2]}`);
+    const lo = ladderLow.replace(/\D/g,""), mi = ladderMid.replace(/\D/g,""), hi = ladderHigh.replace(/\D/g,"");
+    if (lo && mi && hi) extras.push(`Ask Ladder Override: $${lo} / $${mi} / $${hi}`);
+    if (noRules) extras.push(`CREATIVE FREEDOM: Ignore all standard direct mail guardrails and conventions. Generate an unconstrained, experimental concept.`);
+    if (extras.length) msg += "\n\n" + extras.join("\n");
+    return msg;
+  };
+
+  const validateOverrides = () => {
+    const lo = ladderLow.replace(/\D/g,""), mi = ladderMid.replace(/\D/g,""), hi = ladderHigh.replace(/\D/g,"");
+    if (ladderLow || ladderMid || ladderHigh) {
+      if (!(lo && mi && hi)) return "Ask ladder requires all three amounts (Low, Mid, High).";
+      const [a,b,c] = [lo,mi,hi].map(Number);
+      if (!a||!b||!c||!(a<b&&b<c)) return "Ask ladder must be three valid ascending dollar amounts.";
+    }
+    if (colorsChanged) {
+      for (const col of colors) {
+        if (!/^#[0-9a-fA-F]{6}$/.test(col)) return "Color palette must use valid 6-digit hex values (e.g. #1a3558).";
+      }
+    }
+    return "";
+  };
+
+  const callOpenAI = async (messages) => {
+    const cleanKey = apiKey.trim().replace(/[^\x20-\x7E]/g, "");
+    const res = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${cleanKey}` },
+      body: JSON.stringify({ model: "gpt-4o", messages, max_tokens: 5000, temperature: 0.8 })
+    });
+    if (!res.ok) { const e = await res.json(); throw new Error(e.error?.message || `API error ${res.status}`); }
+    const data = await res.json();
+    return data.choices[0].message.content;
+  };
+
+  const generate = async () => {
+    if (!apiKey.trim()) { setError("Enter your OpenAI API key to continue."); return; }
+    if (!orgName.trim() || !mission.trim() || !audience.trim()) { setError("Fill in Organization, Mission, and Audience before generating."); return; }
+    const validErr = validateOverrides();
+    if (validErr) { setError(validErr); return; }
+    const mailDate = [mailMonth, mailYear].filter(Boolean).join(" ");
+    setError(""); setLoading(true); setSections(null); setRawText(""); setResultTab("brief");
+    setOrgSnapshot(orgName.trim()); setAudienceSnapshot(audience.trim());
+    setOverridesSnapshot(getActiveOverrides());
+    setMailDateSnapshot(mailDate);
+    setGoalSnapshot(GOAL_OPTIONS.find(o => o.value === campaignGoal)?.label || "");
+    setToneSnapshot(TONE_OPTIONS.find(o => o.value === tone)?.label || "");
+    genProgress.start();
+    try {
+      const text = await callOpenAI([
+        { role: "system", content: SYSTEM_PROMPT },
+        { role: "user", content: buildUserMessage() }
+      ]);
+      genProgress.finish();
+      const parsed = parseSections(text);
+      setRawText(text);
+      if (Object.keys(parsed).length === 0) {
+        setError("Response didn't match the expected format. Raw response: " + text.slice(0, 600));
+      } else {
+        setSections(parsed);
+        setTimeout(() => outputRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
+      }
+    } catch(e) {
+      genProgress.finish();
+      setError(e.message || "Something went wrong. Check your API key and try again.");
+    } finally { setLoading(false); }
+  };
+
+  const refine = async () => {
+    if (!refineInput.trim() || !rawText) return;
+    setRefining(true); setError(""); setResultTab("brief");
+    refineProgress.start();
+    try {
+      const text = await callOpenAI([
+        { role: "system", content: REFINE_SYSTEM_PROMPT },
+        { role: "user", content: `Existing brief:\n\n${rawText}\n\n---\n\nRefinement instruction: ${refineInput}\n\nReturn the complete updated brief in the same 13-section format.` }
+      ]);
+      refineProgress.finish();
+      setRawText(text); setSections(parseSections(text)); setRefineInput("");
+    } catch(e) {
+      refineProgress.finish();
+      setError(e.message || "Refinement failed. Check your API key and try again.");
+    } finally { setRefining(false); }
+  };
+
+  const clearAll = () => {
+    setTheme(""); setAddinOverride(""); setImageryOverride("");
+    setMailMonth(""); setMailYear(""); setLastPackage("");
+    setEnvelopeFormat(""); setTeaserOverride("");
+    resetColors();
+    setLadderLow(""); setLadderMid(""); setLadderHigh("");
+    setNoRules(false); setCampaignGoal(""); setTone("");
+    setSections(null); setRawText(""); setError("");
+    setResultTab("brief"); setRefineInput("");
+  };
+
+  const copy = (key, text) => {
+    navigator.clipboard.writeText(text);
+    setCopied(key); setTimeout(() => setCopied(""), 1800);
+  };
+
+  const download = () => {
+    if (!rawText || !orgSnapshot) return;
+    let c = `Appeal Studio — Direct Mail Brief\nOrganization: ${orgSnapshot}\n`;
+    if (mailDateSnapshot) c += `Mail Date: ${mailDateSnapshot}\n`;
+    if (goalSnapshot) c += `Campaign Goal: ${goalSnapshot}\n`;
+    if (toneSnapshot) c += `Tone: ${toneSnapshot}\n`;
+    if (overridesSnapshot.length) c += `Overrides: ${overridesSnapshot.join(", ")}\n`;
+    const lo = ladderLow.replace(/\D/g,""), mi = ladderMid.replace(/\D/g,""), hi = ladderHigh.replace(/\D/g,"");
+    if (lo && mi && hi) c += `Gift Ladder: $${lo} / $${mi} / $${hi}\n`;
+    c += `\n${rawText}`;
+    const blob = new Blob([c], { type: "text/plain" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `appeal_brief_${orgSnapshot.replace(/\s+/g,"_").toLowerCase()}.txt`;
+    a.click();
+  };
+
+  const isLoading = loading || refining;
+  const activeProgress = refining ? refineProgress : genProgress;
+
+  return (
+    <div>
+      {/* Header */}
+      <div className="header">
+        <div className="logo-badge">AS</div>
+        <div>
+          <div className="header-title">Appeal Studio</div>
+          <div className="header-sub">Direct Mail Intelligence</div>
+        </div>
+      </div>
+
+      <div className="main">
+
+        {/* Hero — hide once results exist */}
+        {!sections && !isLoading && (
+          <div className="hero">
+            <h1>Generate a complete<br /><span className="hero-accent">direct mail appeal brief</span></h1>
+            <p className="hero-sub">
+              Describe your organization and audience, customize every creative dimension, and get a 13-section campaign-ready brief powered by GPT-4o.
+            </p>
+          </div>
+        )}
+
+        {/* Required inputs */}
+        <div className="inputs-card">
+          <div className="inputs-row">
+            <div className="field">
+              <label className="label">OpenAI API Key</label>
+              <input type="password" className="input" value={apiKey} onChange={e => setApiKey(e.target.value)} placeholder="sk-..." />
+            </div>
+            <div className="field">
+              <label className="label">Organization Name</label>
+              <input type="text" className="input" value={orgName} onChange={e => setOrgName(e.target.value)} placeholder="e.g. Midwest Food Pantry Network" />
+            </div>
+          </div>
+          <div className="field" style={{ marginTop: "1.1rem" }}>
+            <label className="label">Mission Statement</label>
+            <textarea className="input" value={mission} onChange={e => setMission(e.target.value)}
+              placeholder="2–3 sentences describing what your organization does and who it serves..."
+              style={{ height: "72px" }} />
+          </div>
+          <div className="field" style={{ marginTop: "1.1rem" }}>
+            <label className="label">Audience Description</label>
+            <textarea className="input" value={audience} onChange={e => setAudience(e.target.value)}
+              placeholder="Describe your target donors — age, income, location, interests, giving history, lifestyle. The more detail, the better the brief."
+              style={{ height: "90px" }} />
+          </div>
+        </div>
+
+        {/* Customize Bar */}
+        <div className="cbar">
+          <p className="cbar-note">Optional creative overrides — leave blank to let the model decide.</p>
+
+          {/* Row 1: Creative Direction, Add-In, Imagery */}
+          <div className="cbar-row">
+            <div className="cf cf-wide">
+              <span className="cl">Creative Direction <em>(optional)</em></span>
+              <input type="text" className="ci" value={theme} onChange={e => setTheme(e.target.value)}
+                placeholder="e.g. Spring renewal, winter urgency, donor upgrade" maxLength={200} />
+            </div>
+            <div className="cf cf-med">
+              <span className="cl">Add-In <em>(override)</em></span>
+              <input type="text" className="ci" value={addinOverride} onChange={e => setAddinOverride(e.target.value)}
+                placeholder="e.g. Seed packet, journal" maxLength={200} />
+            </div>
+            <div className="cf cf-med">
+              <span className="cl">Imagery <em>(override)</em></span>
+              <input type="text" className="ci" value={imageryOverride} onChange={e => setImageryOverride(e.target.value)}
+                placeholder="e.g. Warm autumn, rural farmhouse" maxLength={200} />
+            </div>
+          </div>
+
+          {/* Advanced Options */}
+          <details className="cbar-adv">
+            <summary>Advanced Options</summary>
+            <div className="cbar-adv-body">
+
+              {/* Package row */}
+              <div>
+                <div className="adv-sec-lbl">Package</div>
+                <div className="adv-pkg-grid">
+                  <div className="cf">
+                    <span className="cl">Envelope <em>format</em></span>
+                    <div className="sw">
+                      <select className="ci" value={envelopeFormat} onChange={e => setEnvelopeFormat(e.target.value)}>
+                        {ENVELOPE_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                  <div className="cf">
+                    <span className="cl">Mail Month</span>
+                    <div className="sw">
+                      <select className="ci" value={mailMonth} onChange={e => setMailMonth(e.target.value)}>
+                        <option value="">Month</option>
+                        {MONTHS.map(m => <option key={m} value={m}>{m}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                  <div className="cf">
+                    <span className="cl">Year</span>
+                    <input type="text" className="ci" value={mailYear} onChange={e => setMailYear(e.target.value)} placeholder="2026" maxLength={4} />
+                  </div>
+                  <div className="cf">
+                    <span className="cl">Last Package <em>sent</em></span>
+                    <input type="text" className="ci" value={lastPackage} onChange={e => setLastPackage(e.target.value)}
+                      placeholder="e.g. Floral calendar, Jan 2025" maxLength={200} />
+                  </div>
+                </div>
+                <div className="cf" style={{ marginTop: ".8rem" }}>
+                  <span className="cl">Envelope Teaser <em>(override)</em></span>
+                  <input type="text" className="ci" value={teaserOverride} onChange={e => setTeaserOverride(e.target.value)}
+                    placeholder='e.g. "A gift inside — for a child who needs a home."' maxLength={200} />
+                </div>
+              </div>
+
+              <div className="adv-divider" />
+
+              {/* Creative voice */}
+              <div>
+                <div className="adv-sec-lbl">Creative Voice</div>
+                <div className="adv-voice-grid">
+                  <div className="cf">
+                    <span className="cl">Tone <em>optional</em></span>
+                    <div className="sw">
+                      <select className="ci" value={tone} onChange={e => setTone(e.target.value)}>
+                        {TONE_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                  <div className="cf">
+                    <span className="cl">Campaign Goal <em>optional</em></span>
+                    <div className="sw">
+                      <select className="ci" value={campaignGoal} onChange={e => setCampaignGoal(e.target.value)}>
+                        {GOAL_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="adv-divider" />
+
+              {/* Colors + Ladder */}
+              <div className="adv-bottom-row">
+                <div>
+                  <div className="adv-sec-lbl">Color Palette <em>overrides AI selection</em></div>
+                  <div className="adv-color-row">
+                    <ColorSwatch label="Primary"   value={colors[0]} onChange={v => updateColor(0, v)} />
+                    <ColorSwatch label="Secondary" value={colors[1]} onChange={v => updateColor(1, v)} />
+                    <ColorSwatch label="Accent"    value={colors[2]} onChange={v => updateColor(2, v)} />
+                    <button className="cs-reset" onClick={resetColors} title="Reset to defaults">↺</button>
+                  </div>
+                  {colorsChanged && (
+                    <div style={{ fontSize: ".62rem", color: "var(--gold)", marginTop: ".35rem", letterSpacing: ".06em" }}>
+                      ● Colors override active
+                    </div>
+                  )}
+                </div>
+
+                <div className="adv-divider-v" />
+
+                <div>
+                  <div className="adv-sec-lbl">Ask Ladder <em>overrides AI selection</em></div>
+                  <div className="ladder">
+                    <input type="text" value={ladderLow}  onChange={e => setLadderLow(e.target.value)}  placeholder="Low"  maxLength={7} />
+                    <input type="text" value={ladderMid}  onChange={e => setLadderMid(e.target.value)}  placeholder="Mid"  maxLength={7} />
+                    <input type="text" value={ladderHigh} onChange={e => setLadderHigh(e.target.value)} placeholder="High" maxLength={7} />
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </details>
+
+          {/* Action row */}
+          <div className="cbar-actions">
+            <button className={`tog ${noRules ? "on-red" : ""}`} onClick={() => setNoRules(!noRules)}
+              title="Remove all guardrails — experimental generation">
+              ⚠ No Rules
+            </button>
+            <button className="tog" onClick={clearAll} title="Clear all overrides and output">
+              ✕ Clear
+            </button>
+            <div className="cbar-spacer" />
+            <button className={`genbtn ${isLoading ? "generating" : ""}`} onClick={generate} disabled={isLoading}>
+              {isLoading ? "Generating…" : sections ? "Regenerate →" : "Generate Appeal Brief →"}
+            </button>
+          </div>
+        </div>
+
+        {/* Error */}
+        {error && <div className="error">⚠ {error}</div>}
+
+        {/* Loading */}
+        {isLoading && (
+          <div className="loading">
+            <div className="spinner" />
+            <div className="loading-label">{refining ? "Refining your brief…" : "Writing your appeal brief…"}</div>
+            <div className="loading-status">{activeProgress.status}</div>
+            <div className="loading-bar-wrap">
+              <div className="loading-bar" style={{ width: `${activeProgress.pct}%` }} />
+            </div>
+          </div>
+        )}
+
+        {/* Output */}
+        {sections && !isLoading && (
+          <div ref={outputRef}>
+            {/* Output header */}
+            <div className="output-header">
+              <div>
+                <div className="output-meta-label">Campaign Brief</div>
+                <div className="output-title">{orgSnapshot}</div>
+              </div>
+              <button className={`btn-ghost ${copied === "__ALL__" ? "copied" : ""}`}
+                onClick={() => copy("__ALL__", rawText)}>
+                {copied === "__ALL__" ? "✓ Copied All" : "Copy All"}
+              </button>
+            </div>
+
+            {/* Summary card */}
+            <div className="summary-card">
+              <div className="summary-item">
+                <div className="summary-key">Organization</div>
+                <div className="summary-val">{orgSnapshot}</div>
+                {mailDateSnapshot && <div className="summary-val sm">{mailDateSnapshot}</div>}
+              </div>
+              <div className="summary-item">
+                <div className="summary-key">Campaign Context</div>
+                {goalSnapshot && <div className="summary-val">{goalSnapshot}</div>}
+                {toneSnapshot && <div className="summary-val sm">{toneSnapshot} tone</div>}
+                {!goalSnapshot && !toneSnapshot && <div className="summary-val sm">AI-driven</div>}
+              </div>
+              <div className="summary-item">
+                <div className="summary-key">Overrides Active</div>
+                {overridesSnapshot.length > 0 ? (
+                  <div className="summary-badges">
+                    {overridesSnapshot.map(o => (
+                      <span key={o} className={`sbadge ${o === "No Rules" ? "red" : ""}`}>{o}</span>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="summary-val sm">None — AI-driven</div>
+                )}
+              </div>
+            </div>
+
+            {/* Result tabs */}
+            <div className="result-tabs">
+              <button className={`result-tab ${resultTab === "brief" ? "active" : ""}`}
+                onClick={() => setResultTab("brief")}>Appeal Brief</button>
+              <button className={`result-tab ${resultTab === "workflow" ? "active" : ""}`}
+                onClick={() => setResultTab("workflow")}>Image Workflow</button>
+            </div>
+
+            {/* Post-generate error */}
+            {error && <div className="error">⚠ {error}</div>}
+
+            {/* Brief tab */}
+            {resultTab === "brief" && (
+              <div>
+                <div className="refine-bar">
+                  <div className="field">
+                    <label className="label">Refine This Appeal</label>
+                    <input type="text" className="input" value={refineInput}
+                      onChange={e => setRefineInput(e.target.value)}
+                      onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); refine(); } }}
+                      placeholder="e.g. switch the add-in to a seed packet, make the letter warmer, use a Christmas theme…"
+                      style={{ fontSize: ".88rem" }} />
+                    <div className="refine-hint">Describe what to change — everything else stays intact</div>
+                  </div>
+                  <button className="refine-btn" onClick={refine} disabled={!refineInput.trim()}>Refine</button>
+                </div>
+
+                {GROUPS.map(group => (
+                  <details key={group.title} className="acc-group" open>
+                    <summary>{group.title}</summary>
+                    <div>
+                      {group.sections.map(secName => {
+                        const content = sections[secName] || "";
+                        if (!content) return null;
+                        return (
+                          <div key={secName} className="section-block">
+                            <div className="section-heading">
+                              <span className="section-icon">{ICONS[secName]}</span>
+                              <span className="section-label">{secName}</span>
+                            </div>
+                            <div className="section-content">{renderContent(content)}</div>
+                            <div className="section-footer">
+                              <button className={`btn-ghost ${copied === secName ? "copied" : ""}`}
+                                onClick={() => copy(secName, content)}>
+                                {copied === secName ? "✓ Copied" : "Copy"}
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </details>
+                ))}
+              </div>
+            )}
+
+            {/* Image Workflow tab */}
+            {resultTab === "workflow" && (
+              <div className="workflow-panel">
+                <div className="workflow-title">🎨 Image Workflow</div>
+                <p className="workflow-hint">
+                  Use the Brief tab for review and refinement. When ready to generate the package image, copy these two prompts into your image AI — Step 1 sets the persona, Step 2 is the blueprint.
+                </p>
+                <div className="prompt-block step-one">
+                  <span className="prompt-label">Step 1 — Master Persona Prompt</span>
+                  <button className={`prompt-copy ${copied === "__PERSONA__" ? "ok" : ""}`}
+                    onClick={() => copy("__PERSONA__", MASTER_PERSONA_PROMPT)}>
+                    {copied === "__PERSONA__" ? "Copied!" : "Copy"}
+                  </button>
+                  <div className="prompt-text">{MASTER_PERSONA_PROMPT}</div>
+                </div>
+                {sections["Appeal Package Image Prompt"] ? (
+                  <div className="prompt-block step-two">
+                    <span className="prompt-label step-two-lbl">Step 2 — Appeal Package Blueprint Prompt</span>
+                    <button className={`prompt-copy ${copied === "__BLUEPRINT__" ? "ok" : ""}`}
+                      onClick={() => copy("__BLUEPRINT__", sections["Appeal Package Image Prompt"].replace(/\*\*/g,""))}>
+                      {copied === "__BLUEPRINT__" ? "Copied!" : "Copy"}
+                    </button>
+                    <div className="prompt-text">{sections["Appeal Package Image Prompt"].replace(/\*\*/g,"")}</div>
+                  </div>
+                ) : (
+                  <div style={{ color:"var(--muted)", fontSize:".84rem", fontStyle:"italic" }}>
+                    Image prompt not found in this brief. Try regenerating.
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Action bar */}
+            <div className="action-bar">
+              <button className="btn-outline" onClick={download}>Download .txt</button>
+              <button className="btn-secondary" onClick={generate}>Regenerate</button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>
