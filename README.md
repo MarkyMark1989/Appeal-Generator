@@ -9,7 +9,7 @@ Paste in an organization name, mission, and audience — Appeal Studio produces 
 ## How to use
 
 1. Open `appeal-studio.html` in any modern browser (no build step, no server).
-2. Enter your **Anthropic API key** in the key field (stored only in your browser session — never sent anywhere except the Anthropic API).
+2. Enter your **OpenAI API key** in the key field (stored only in your browser session — never sent anywhere except the OpenAI API).
 3. Fill in the required fields: org name, mission, audience.
 4. Optionally expand the customization panel to set tone, mail date, colors, add-in type, and ask ladder amounts.
 5. Click **Generate** and the brief appears inline.
@@ -17,7 +17,7 @@ Paste in an organization name, mission, and audience — Appeal Studio produces 
 
 ## Requirements
 
-- A valid [Anthropic API key](https://console.anthropic.com/)
+- A valid [OpenAI API key](https://platform.openai.com/api-keys) (uses GPT-4o)
 - A modern browser (Chrome, Firefox, Safari, Edge)
 - No Node, no npm, no build tools
 
