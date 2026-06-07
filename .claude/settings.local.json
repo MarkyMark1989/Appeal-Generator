@@ -9,7 +9,11 @@
       "Bash(git init *)",
       "Bash(git -C \"/Users/jmj/Desktop/Appeal Generator\" status)",
       "Bash(git -C \"/Users/jmj/Desktop/Appeal Generator\" log --oneline)",
-      "Bash(git -C \"/Users/jmj/Desktop/Appeal Generator\" add appeal-studio.html .claude/)"
+      "Bash(git -C \"/Users/jmj/Desktop/Appeal Generator\" add appeal-studio.html .claude/)",
+      "Bash(git -C \"/Users/jmj/Desktop/Appeal Generator\" add .gitignore README.md .htmlhintrc .github/)",
+      "Bash(git -C '/Users/jmj/Desktop/Appeal Generator' commit -m ' *)",
+      "Bash(git -C \"/Users/jmj/Desktop/Appeal Generator\" diff)",
+      "Bash(git -C \"/Users/jmj/Desktop/Appeal Generator\" add .claude/settings.local.json)"
     ]
   }
 }
