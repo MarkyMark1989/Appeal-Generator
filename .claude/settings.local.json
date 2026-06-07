@@ -22,7 +22,8 @@
       "Bash(git -C \"/Users/jmj/Desktop/Appeal Generator\" rm --cached \"company-projects-bt-main \\(9\\).zip\")",
       "Bash(git -C \"/Users/jmj/Desktop/Appeal Generator\" push)",
       "Bash(git -C \"/Users/jmj/Desktop/Appeal Generator\" add README.md)",
-      "Bash(git -C \"/Users/jmj/Desktop/Appeal Generator\" log origin/main..main --oneline)"
+      "Bash(git -C \"/Users/jmj/Desktop/Appeal Generator\" log origin/main..main --oneline)",
+      "Bash(git -C \"/Users/jmj/Desktop/Appeal Generator\" add appeal-studio.html)"
     ]
   }
 }
