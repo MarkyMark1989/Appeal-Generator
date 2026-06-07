@@ -1,0 +1,34 @@
+name: Validate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-html:
+    name: Check HTML
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install htmlhint
+        run: npm install -g htmlhint
+
+      - name: Lint appeal-studio.html
+        run: htmlhint appeal-studio.html --config .htmlhintrc || true
+
+  size-check:
+    name: File size check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Warn if appeal-studio.html exceeds 500KB
+        run: |
+          SIZE=$(wc -c < appeal-studio.html)
+          echo "appeal-studio.html is ${SIZE} bytes"
+          if [ "$SIZE" -gt 512000 ]; then
+            echo "::warning file=appeal-studio.html::File exceeds 500KB — consider splitting CSS/JS into sibling files"
+          fi
