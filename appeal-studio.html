@@ -226,6 +226,28 @@ details.acc-group[open] > summary::after { content: '−'; }
 @media (max-width: 420px) {
   .summary-card { grid-template-columns: 1fr; }
 }
+
+/* ── Quality Check ── */
+.quality-panel { background: var(--nm); border: 1px solid var(--border); border-radius: 12px; padding: 1.6rem 1.7rem; }
+.qc-section { margin-top: 1.4rem; }
+.qc-section-title { font-size: .68rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--gold); margin-bottom: .8rem; }
+.qc-row { padding: .7rem 0; border-bottom: 1px solid var(--border-dim); }
+.qc-row-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.qc-crit { font-size: .86rem; color: var(--cream); font-weight: 600; }
+.qc-score { font-size: .78rem; font-weight: 700; font-family: monospace; padding: .15rem .5rem; border-radius: 5px; flex-shrink: 0; }
+.qc-score-good { background: rgba(74,170,90,.14); color: #6cc47e; }
+.qc-score-ok   { background: rgba(201,168,76,.14); color: var(--gold); }
+.qc-score-low  { background: rgba(239,68,68,.12); color: #f87171; }
+.qc-note { font-size: .78rem; color: var(--muted); margin-top: .3rem; line-height: 1.5; }
+.qc-overall { margin-top: 1rem; font-size: .82rem; color: var(--text); line-height: 1.6; background: rgba(255,255,255,.025); border-radius: 8px; padding: .8rem 1rem; }
+.qc-palette { display: flex; flex-direction: column; gap: .5rem; }
+.qc-swatch-row { display: flex; align-items: center; gap: .7rem; }
+.qc-swatch { width: 26px; height: 26px; border-radius: 6px; flex-shrink: 0; }
+.qc-swatch-name { font-size: .82rem; color: var(--cream); flex: 1; }
+.qc-hex { font-family: monospace; font-size: .72rem; color: var(--muted); }
+.qc-tag { font-size: .68rem; font-family: monospace; padding: .18rem .5rem; border-radius: 5px; flex-shrink: 0; }
+.qc-tag-good { background: rgba(74,170,90,.14); color: #6cc47e; }
+.qc-tag-low  { background: rgba(239,68,68,.12); color: #f87171; }
 </style>
 </head>
 <body>
@@ -311,6 +333,98 @@ End the paragraph with: "Landscape 16:9 aspect ratio — all components must fit
 const REFINE_SYSTEM_PROMPT = `You are a senior direct mail creative director refining an existing 13-section appeal brief. The user has specified one or more targeted changes. Keep every section not explicitly mentioned exactly as written. Return the complete brief in the same format using the same 13 ## headings. Return only the brief — no preamble or commentary.`;
 
 const MASTER_PERSONA_PROMPT = `You are a senior direct mail creative director with 30 years of experience producing award-winning fundraising packages for nonprofits, advocacy organizations, and mission-driven brands. When generating appeal package images, you produce precise, production-ready flat-lay blueprint prompts showing every component of the mail piece — outer envelope (front and back), donor letter, reply card, and physical add-in — arranged together so the marketing team can brief a print vendor or designer directly from the image. Your image prompts are faithful to the appeal brief: exact gift amounts, exact add-in dimensions, exact teaser copy, exact color hex codes. No substitutions, no hallucinated amounts, no invented components. Every piece reflects the dignity and mission of the organization it serves.`;
+
+// ─────────────────────────────────────────────────────────────────────────
+// PROMPT EVALUATION (LLM-as-judge)
+// A second model call that grades the generated brief against a fixed rubric
+// and returns structured JSON. This is the "LLM-as-judge" pattern: the model
+// evaluates output against specific, objective criteria.
+// ─────────────────────────────────────────────────────────────────────────
+const EVAL_SYSTEM_PROMPT = `You are a senior direct mail quality reviewer. You will be given a complete 13-section direct mail appeal brief. Grade it against the rubric below and respond with ONLY a JSON object — no markdown, no commentary.
+
+Score each criterion from 1 to 5 (5 = excellent, 3 = acceptable, 1 = poor) and give a one-sentence note explaining the score.
+
+RUBRIC CRITERIA (use these exact criterion names):
+1. "Imagery specificity" — Is the Imagery section specific enough that a photographer or art director could shoot it without guessing? Specific subjects, settings, lighting, and mood score high; vague or generic descriptions score low.
+2. "Ask ladder fit" — Do the Call to Action gift amounts match the stated audience income level in Target Audience Summary? Amounts appropriate to the income band score high; mismatched amounts score low.
+3. "Image prompt self-contained" — Does the Appeal Package Image Prompt spell out every literal value inline (exact teaser text, exact hex codes, exact gift amounts)? If it references other sections ("from Color Palette above", "from Call to Action above") instead of inlining values, score low.
+4. "Beneficiary story" — Does the Letter Opening lead with a specific named person and a concrete situation, rather than a generic appeal? Specific and named scores high; generic scores low.
+5. "Theme–audience fit" — Does the Theme genuinely connect to the audience's stated values and demographics? Strong, natural connection scores high; forced or generic scores low.
+
+Respond with this exact JSON shape:
+{
+  "scores": [
+    { "criterion": "Imagery specificity", "score": 4, "note": "..." },
+    { "criterion": "Ask ladder fit", "score": 5, "note": "..." },
+    { "criterion": "Image prompt self-contained", "score": 5, "note": "..." },
+    { "criterion": "Beneficiary story", "score": 4, "note": "..." },
+    { "criterion": "Theme–audience fit", "score": 5, "note": "..." }
+  ],
+  "overall": "One or two sentences summarizing the brief's strengths and the single most useful improvement."
+}`;
+
+// ─────────────────────────────────────────────────────────────────────────
+// TOOL USE (function calling)
+// We define a tool the model can call. The model decides to call it with the
+// palette's hex codes; our JavaScript runs the ACTUAL math (validity + WCAG
+// contrast) and returns the result; the model then writes a plain-English
+// assessment. This is the canonical tool-use loop.
+// ─────────────────────────────────────────────────────────────────────────
+const PALETTE_TOOL = {
+  type: "function",
+  function: {
+    name: "validate_palette",
+    description: "Validate hex color codes and check whether each color has enough contrast to print legible text on it. Returns validity and WCAG contrast ratios.",
+    parameters: {
+      type: "object",
+      properties: {
+        colors: {
+          type: "array",
+          description: "The colors from the brief's Color Palette section.",
+          items: {
+            type: "object",
+            properties: {
+              name: { type: "string", description: "The color's name, e.g. 'Harvest Gold'." },
+              hex:  { type: "string", description: "The 6-digit hex code, e.g. '#F5C71A'." }
+            },
+            required: ["name", "hex"]
+          }
+        }
+      },
+      required: ["colors"]
+    }
+  }
+};
+
+// Pure helper math — these run in the browser, not in the model.
+function hexToRgb(hex) {
+  const m = /^#?([0-9a-fA-F]{6})$/.exec(String(hex).trim());
+  if (!m) return null;
+  const int = parseInt(m[1], 16);
+  return { r: (int >> 16) & 255, g: (int >> 8) & 255, b: int & 255 };
+}
+function relativeLuminance({ r, g, b }) {
+  const f = c => { c /= 255; return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); };
+  return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
+}
+function contrastRatio(rgb1, rgb2) {
+  const L1 = relativeLuminance(rgb1), L2 = relativeLuminance(rgb2);
+  const [hi, lo] = L1 > L2 ? [L1, L2] : [L2, L1];
+  return (hi + 0.05) / (lo + 0.05);
+}
+// The actual tool implementation the model's call gets routed to.
+function runPaletteTool(colors) {
+  const white = { r: 255, g: 255, b: 255 }, black = { r: 0, g: 0, b: 0 };
+  const items = (colors || []).map(c => {
+    const rgb = hexToRgb(c.hex);
+    if (!rgb) return { name: c.name, hex: c.hex, valid: false, bestOn: null, ratio: 0, readable: false };
+    const cw = contrastRatio(rgb, white), cb = contrastRatio(rgb, black);
+    const bestOn = cw >= cb ? "white" : "black";
+    const ratio = Math.max(cw, cb);
+    return { name: c.name, hex: c.hex, valid: true, bestOn, ratio: Math.round(ratio * 100) / 100, readable: ratio >= 4.5 };
+  });
+  return { items };
+}
 
 const SECTIONS = ["Theme","Imagery","Color Palette","Physical Add-In","Envelope Teaser Options","Letter Opening","Call to Action","Inspired By","Target Audience Summary","Comparable Audiences","Rationale","Testing Notes","Appeal Package Image Prompt"];
 
@@ -484,6 +598,12 @@ function App() {
   const [resultTab, setResultTab] = React.useState("brief");
   const [refineInput, setRefineInput] = React.useState("");
 
+  // Quality Check state (prompt evaluation + tool use)
+  const [evaluation, setEvaluation]   = React.useState(null);  // { scores:[...], overall }
+  const [paletteCheck, setPaletteCheck] = React.useState(null); // { items:[...], summary }
+  const [qualityLoading, setQualityLoading] = React.useState(false);
+  const [qualityError, setQualityError] = React.useState("");
+
   // Snapshots for display
   const [orgSnapshot, setOrgSnapshot]             = React.useState("");
   const [audienceSnapshot, setAudienceSnapshot]   = React.useState("");
@@ -555,17 +675,25 @@ function App() {
     return "";
   };
 
-  const callOpenAI = async (messages) => {
+  // Low-level call. Returns the full message object so callers can read either
+  // .content (text) or .tool_calls (when the model wants to call a tool).
+  const callOpenAIRaw = async (messages, opts = {}) => {
     const cleanKey = apiKey.trim().replace(/[^\x20-\x7E]/g, "");
+    const body = { model: "gpt-4o", messages, max_tokens: opts.maxTokens || 5000, temperature: opts.temperature ?? 0.8 };
+    if (opts.tools) body.tools = opts.tools;
+    if (opts.toolChoice) body.tool_choice = opts.toolChoice;
+    if (opts.jsonMode) body.response_format = { type: "json_object" };
     const res = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: { "Content-Type": "application/json", "Authorization": `Bearer ${cleanKey}` },
-      body: JSON.stringify({ model: "gpt-4o", messages, max_tokens: 5000, temperature: 0.8 })
+      body: JSON.stringify(body)
     });
     if (!res.ok) { const e = await res.json(); throw new Error(e.error?.message || `API error ${res.status}`); }
     const data = await res.json();
-    return data.choices[0].message.content;
+    return data.choices[0].message;
   };
+  // Convenience wrapper for the existing text-only callers.
+  const callOpenAI = async (messages) => (await callOpenAIRaw(messages)).content;
 
   const generate = async () => {
     if (!apiKey.trim()) { setError("Enter your OpenAI API key to continue."); return; }
@@ -574,6 +702,7 @@ function App() {
     if (validErr) { setError(validErr); return; }
     const mailDate = [mailMonth, mailYear].filter(Boolean).join(" ");
     setError(""); setLoading(true); setSections(null); setRawText(""); setResultTab("brief");
+    setEvaluation(null); setPaletteCheck(null); setQualityError("");
     setOrgSnapshot(orgName.trim()); setAudienceSnapshot(audience.trim());
     setOverridesSnapshot(getActiveOverrides());
     setMailDateSnapshot(mailDate);
@@ -593,11 +722,66 @@ function App() {
       } else {
         setSections(parsed);
         setTimeout(() => outputRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
+        runQualityChecks(text, parsed); // fire-and-forget: scores the brief in the background
       }
     } catch(e) {
       genProgress.finish();
       setError(e.message || "Something went wrong. Check your API key and try again.");
     } finally { setLoading(false); }
+  };
+
+  // Runs the two quality features in parallel after a brief is generated:
+  //   1. evaluation  — LLM-as-judge scores the whole brief against a rubric
+  //   2. paletteCheck — tool-use loop validates the color palette's contrast
+  const runQualityChecks = async (briefText, parsed) => {
+    setQualityLoading(true); setQualityError("");
+    try {
+      const [evalResult, paletteResult] = await Promise.all([
+        evaluateBrief(briefText),
+        checkPalette(parsed["Color Palette"] || "")
+      ]);
+      setEvaluation(evalResult);
+      setPaletteCheck(paletteResult);
+    } catch(e) {
+      setQualityError(e.message || "Quality check could not complete.");
+    } finally { setQualityLoading(false); }
+  };
+
+  // FEATURE 1 — Prompt evaluation (LLM-as-judge). One JSON-mode call.
+  const evaluateBrief = async (briefText) => {
+    const msg = await callOpenAIRaw([
+      { role: "system", content: EVAL_SYSTEM_PROMPT },
+      { role: "user", content: `Here is the brief to grade:\n\n${briefText}` }
+    ], { jsonMode: true, temperature: 0.2, maxTokens: 900 });
+    return JSON.parse(msg.content);
+  };
+
+  // FEATURE 2 — Tool use (function calling). The full loop:
+  //   a) ask the model to validate the palette, forcing it to call our tool
+  //   b) read the hex codes it extracted, run the REAL math in runPaletteTool()
+  //   c) send the tool result back, get a plain-English assessment
+  const checkPalette = async (paletteText) => {
+    if (!paletteText.trim()) return null;
+    const messages = [
+      { role: "system", content: "You are a print production assistant. Use the validate_palette tool to check the colors in the provided palette text. Extract every color name and its hex code." },
+      { role: "user", content: `Color Palette section:\n\n${paletteText}` }
+    ];
+    // (a) force the tool call
+    const first = await callOpenAIRaw(messages, {
+      tools: [PALETTE_TOOL],
+      toolChoice: { type: "function", function: { name: "validate_palette" } },
+      temperature: 0, maxTokens: 500
+    });
+    const toolCall = first.tool_calls?.[0];
+    if (!toolCall) return null;
+    const args = JSON.parse(toolCall.function.arguments);
+    // (b) run the actual validation in the browser
+    const result = runPaletteTool(args.colors);
+    // (c) hand the result back to the model for a readable summary
+    messages.push(first);
+    messages.push({ role: "tool", tool_call_id: toolCall.id, content: JSON.stringify(result) });
+    const second = await callOpenAIRaw(messages, { temperature: 0.3, maxTokens: 400 });
+    return { items: result.items, summary: second.content };
   };
 
   const refine = async () => {
@@ -610,7 +794,10 @@ function App() {
         { role: "user", content: `Existing brief:\n\n${rawText}\n\n---\n\nRefinement instruction: ${refineInput}\n\nReturn the complete updated brief in the same 13-section format.` }
       ]);
       refineProgress.finish();
-      setRawText(text); setSections(parseSections(text)); setRefineInput("");
+      const reparsed = parseSections(text);
+      setRawText(text); setSections(reparsed); setRefineInput("");
+      setEvaluation(null); setPaletteCheck(null);
+      runQualityChecks(text, reparsed); // re-score the refined brief
     } catch(e) {
       refineProgress.finish();
       setError(e.message || "Refinement failed. Check your API key and try again.");
@@ -626,6 +813,7 @@ function App() {
     setNoRules(false); setCampaignGoal(""); setTone("");
     setSections(null); setRawText(""); setError("");
     setResultTab("brief"); setRefineInput("");
+    setEvaluation(null); setPaletteCheck(null); setQualityError("");
   };
 
   const copy = (key, text) => {
@@ -906,6 +1094,10 @@ function App() {
                 onClick={() => setResultTab("brief")}>Appeal Brief</button>
               <button className={`result-tab ${resultTab === "workflow" ? "active" : ""}`}
                 onClick={() => setResultTab("workflow")}>Image Workflow</button>
+              <button className={`result-tab ${resultTab === "quality" ? "active" : ""}`}
+                onClick={() => setResultTab("quality")}>
+                Quality Check{qualityLoading ? " …" : evaluation ? ` · ${(evaluation.scores.reduce((s,c)=>s+c.score,0)/evaluation.scores.length).toFixed(1)}` : ""}
+              </button>
             </div>
 
             {/* Post-generate error */}
@@ -983,6 +1175,73 @@ function App() {
                 ) : (
                   <div style={{ color:"var(--muted)", fontSize:".84rem", fontStyle:"italic" }}>
                     Image prompt not found in this brief. Try regenerating.
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Quality Check tab */}
+            {resultTab === "quality" && (
+              <div className="quality-panel">
+                <div className="workflow-title">✓ Quality Check</div>
+                <p className="workflow-hint">
+                  An automated review of this brief. The score uses an AI judge against a fixed rubric; the palette check uses a tool that measures real print contrast.
+                </p>
+
+                {qualityLoading && (
+                  <div className="loading" style={{ padding: "2rem 0" }}>
+                    <div className="spinner"></div>
+                    <div className="loading-label">Reviewing brief…</div>
+                  </div>
+                )}
+
+                {qualityError && <div className="error">⚠ {qualityError}</div>}
+
+                {/* Prompt evaluation (LLM-as-judge) */}
+                {evaluation && (
+                  <div className="qc-section">
+                    <div className="qc-section-title">Brief Score — Rubric Evaluation</div>
+                    {evaluation.scores.map(s => (
+                      <div key={s.criterion} className="qc-row">
+                        <div className="qc-row-head">
+                          <span className="qc-crit">{s.criterion}</span>
+                          <span className={`qc-score qc-score-${s.score >= 4 ? "good" : s.score === 3 ? "ok" : "low"}`}>{s.score}/5</span>
+                        </div>
+                        <div className="qc-note">{s.note}</div>
+                      </div>
+                    ))}
+                    {evaluation.overall && (
+                      <div className="qc-overall"><strong>Summary:</strong> {evaluation.overall}</div>
+                    )}
+                  </div>
+                )}
+
+                {/* Tool use (palette contrast validation) */}
+                {paletteCheck && (
+                  <div className="qc-section">
+                    <div className="qc-section-title">Palette Check — Tool Use</div>
+                    <div className="qc-palette">
+                      {paletteCheck.items.map((it, i) => (
+                        <div key={i} className="qc-swatch-row">
+                          <span className="qc-swatch" style={{ background: it.valid ? it.hex : "transparent", border: it.valid ? "none" : "1px dashed #777" }}></span>
+                          <span className="qc-swatch-name">{it.name} <span className="qc-hex">{it.hex}</span></span>
+                          {it.valid ? (
+                            <span className={`qc-tag ${it.readable ? "qc-tag-good" : "qc-tag-low"}`}>
+                              {it.ratio}:1 · best on {it.bestOn}{it.readable ? "" : " · low contrast"}
+                            </span>
+                          ) : (
+                            <span className="qc-tag qc-tag-low">invalid hex</span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                    {paletteCheck.summary && <div className="qc-overall">{paletteCheck.summary}</div>}
+                  </div>
+                )}
+
+                {!qualityLoading && !evaluation && !paletteCheck && !qualityError && (
+                  <div style={{ color:"var(--muted)", fontSize:".84rem", fontStyle:"italic" }}>
+                    No quality data yet. Generate a brief to run the check.
                   </div>
                 )}
               </div>
