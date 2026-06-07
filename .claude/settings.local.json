@@ -16,7 +16,13 @@
       "Bash(git -C \"/Users/jmj/Desktop/Appeal Generator\" add .claude/settings.local.json)",
       "Bash(git -C \"/Users/jmj/Desktop/Appeal Generator\" remote add origin https://github.com/MarkyMark1989/Appeal-Generator.git)",
       "Bash(git -C \"/Users/jmj/Desktop/Appeal Generator\" remote -v)",
-      "Bash(gh auth *)"
+      "Bash(gh auth *)",
+      "Bash(git -C \"/Users/jmj/Desktop/Appeal Generator\" pull origin main --allow-unrelated-histories --no-rebase)",
+      "Bash(git -C \"/Users/jmj/Desktop/Appeal Generator\" push -u origin main)",
+      "Bash(git -C \"/Users/jmj/Desktop/Appeal Generator\" rm --cached \"company-projects-bt-main \\(9\\).zip\")",
+      "Bash(git -C \"/Users/jmj/Desktop/Appeal Generator\" push)",
+      "Bash(git -C \"/Users/jmj/Desktop/Appeal Generator\" add README.md)",
+      "Bash(git -C \"/Users/jmj/Desktop/Appeal Generator\" log origin/main..main --oneline)"
     ]
   }
 }
